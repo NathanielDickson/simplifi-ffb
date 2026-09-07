@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simplifi FFB — AI-guided fantasy football</title>
+<meta name="description" content="Simplifi FFB connects to your Yahoo and ESPN fantasy football leagues, scores every projection under your league's own rules, and explains each lineup and waiver decision.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1220'/%3E%3Cpath d='M18 40 L30 22 L38 34 L46 26' fill='none' stroke='%2334d399' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0f172a; --panel:#111a2e; --line:rgba(148,163,184,.14);
+    --text:#e6edf7; --muted:#94a3b8; --accent:#34d399; --accent-2:#a7f3d0;
+    --danger:#f87171; --warn:#fbbf24;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,rgba(52,211,153,.10),transparent 60%),var(--bg);color:var(--text);
+    font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{font-family:Sora,Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);background:rgba(11,18,32,.72);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:Sora,sans-serif;font-weight:700;font-size:18px}
+  .brand svg{width:28px;height:28px}
+  .navlinks{display:flex;gap:26px;color:var(--muted);font-size:14px;font-weight:500}
+  .navlinks a:hover{color:var(--text)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:11px 18px;border-radius:10px;font-weight:600;font-size:14px;border:1px solid var(--line);transition:.15s;cursor:pointer;background:transparent;color:var(--text)}
+  .btn:hover{border-color:rgba(148,163,184,.4);transform:translateY(-1px)}
+  .btn.primary{background:var(--accent);color:#052e22;border-color:transparent}
+  .btn.primary:hover{background:var(--accent-2)}
+  .btn.block{width:100%}
+
+  /* hero */
+  .hero{padding:96px 0 56px;display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+    padding:6px 12px;border:1px solid rgba(52,211,153,.35);border-radius:999px;background:rgba(52,211,153,.08)}
+  .eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+  h1{font-size:clamp(38px,5.2vw,60px);line-height:1.05;margin:22px 0 18px}
+  h1 span{color:var(--accent)}
+  .lead{font-size:18px;color:var(--muted);max-width:56ch}
+  .cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+  .platforms{margin-top:26px;display:flex;gap:18px;color:var(--muted);font-size:13px;font-weight:500}
+  .platforms b{color:var(--text)}
+
+  /* sign-in card */
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0)) ,var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+  .card h3{font-size:18px;margin-bottom:4px}
+  .card p{margin:0 0 18px;color:var(--muted);font-size:14px}
+  .stack{display:grid;gap:10px}
+  .btn .logo{width:18px;height:18px;border-radius:5px;display:inline-grid;place-items:center;font-size:11px;font-weight:800;font-family:Sora,sans-serif}
+  .logo.y{background:#6001d2;color:#fff}
+  .logo.e{background:#d00;color:#fff}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:16px 0}
+  .divider:before,.divider:after{content:"";flex:1;height:1px;background:var(--line)}
+  .note{font-size:12.5px;color:var(--muted);background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:10px 12px;margin-top:14px}
+  .note b{color:var(--warn)}
+
+  /* preview */
+  .preview{margin-top:18px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg2)}
+  .preview .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .preview .bar b{color:var(--text)}
+  .row{display:grid;grid-template-columns:44px 1fr auto auto;gap:10px;align-items:center;padding:9px 14px;font-size:13px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .slot{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+  .row .name{font-weight:500}
+  .row .team{color:var(--muted);font-size:12px;margin-left:6px}
+  .pts{font-variant-numeric:tabular-nums;font-weight:600}
+  .delta{font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;color:var(--accent)}
+  .delta.neg{color:var(--danger)}
+  .tag{font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:999px;background:rgba(52,211,153,.12);color:var(--accent);text-transform:uppercase}
+
+  /* sections */
+  section{padding:64px 0}
+  .kicker{color:var(--accent);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+  h2{font-size:clamp(28px,3.4vw,38px);margin:10px 0 12px}
+  .sub{color:var(--muted);max-width:62ch;margin:0 0 34px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .feat .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:rgba(52,211,153,.1);color:var(--accent);margin-bottom:14px}
+  .feat h3{font-size:16px;margin-bottom:8px}
+  .feat p{margin:0;color:var(--muted);font-size:14px}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+  .list{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+  .list li{display:flex;gap:12px;align-items:flex-start;font-size:15px}
+  .list li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:2px}
+  .ok i{background:rgba(52,211,153,.15);color:var(--accent)}
+  .no i{background:rgba(248,113,113,.15);color:var(--danger)}
+  .list li span{color:var(--muted)}
+  .list li span b{color:var(--text);font-weight:600}
+
+  .band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center}
+  .stat b{display:block;font-family:Sora,sans-serif;font-size:30px;color:var(--text)}
+  .stat span{font-size:13px;color:var(--muted)}
+
+  footer{padding:36px 0 44px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .attrib{font-weight:500}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;padding-top:64px}
+    .grid{grid-template-columns:1fr 1fr}
+    .split{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .navlinks{display:none}
+  }
+  @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0f172a"/><path d="M18 40 L30 22 L38 34 L46 26" fill="none" stroke="#34d399" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Simplifi FFB
+    </a>
+    <div class="navlinks">
+      <a href="#features">Features</a>
+      <a href="#data">Data &amp; privacy</a>
+      <a href="#how">How it works</a>
+    </div>
+    <a class="btn" href="#signin">Sign in</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><i></i> 2026 season · private beta</span>
+      <h1>Your fantasy football brain, <span>sharpened by AI.</span></h1>
+      <p class="lead">Simplifi FFB connects to your Yahoo and ESPN leagues, scores every projection under <em>your</em> league's own rules, and explains exactly why each lineup and waiver move is the right one.</p>
+      <div class="cta">
+        <a class="btn primary" href="#signin">Get started</a>
+        <a class="btn" href="#how">See how it works</a>
+      </div>
+      <div class="platforms">
+        <span>Works with <b>Yahoo Fantasy</b></span>
+        <span>·</span>
+        <span><b>ESPN Fantasy</b></span>
+        <span>·</span>
+        <span>Read-only, always</span>
+      </div>
+    </div>
+
+    <div class="card" id="signin">
+      <h3>Sign in to your leagues</h3>
+      <p>Authorize once with the platform you play on. We only ever read.</p>
+      <div class="stack">
+        <a class="btn block" href="#signin" onclick="return false"><span class="logo y">Y</span> Sign in with Yahoo</a>
+        <a class="btn block" href="#signin" onclick="return false"><span class="logo e">E</span> Connect ESPN Fantasy</a>
+      </div>
+      <div class="divider">this week's lineup, explained</div>
+      <div class="preview" aria-label="Sample lineup preview">
+        <div class="bar"><span><b>Conference Room QBs</b> · Week 1</span><span>Proj <b>127.4</b></span></div>
+        <div class="row"><span class="slot">QB</span><span><span class="name">J. Allen</span><span class="team">BUF</span></span><span class="delta">+2.1</span><span class="pts">23.8</span></div>
+        <div class="row"><span class="slot">RB</span><span><span class="name">B. Robinson</span><span class="team">ATL</span></span><span class="tag">start</span><span class="pts">17.2</span></div>
+        <div class="row"><span class="slot">WR</span><span><span class="name">J. Chase</span><span class="team">CIN</span></span><span class="delta">+0.6</span><span class="pts">19.5</span></div>
+        <div class="row"><span class="slot">FLEX</span><span><span class="name">D. London</span><span class="team">ATL</span></span><span class="delta neg">bye wk 5</span><span class="pts">14.1</span></div>
+      </div>
+      <div class="note"><b>Private beta.</b> Sign-in is currently limited to invited users while platform access is finalized.</div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="kicker">What it does</div>
+    <h2>Every decision, with the reasoning attached.</h2>
+    <p class="sub">The engine computes the numbers; the assistant only puts them into words. Nothing is ever guessed at.</p>
+    <div class="grid">
+      <div class="feat"><div class="ic">◈</div><h3>Lineup optimizer</h3><p>Provably optimal lineups across FLEX, superflex and multi-position slots — with locks, byes and injury designations handled correctly.</p></div>
+      <div class="feat"><div class="ic">◎</div><h3>Waiver radar</h3><p>Available players ranked by rest-of-season value under your league's scoring, not a generic default.</p></div>
+      <div class="feat"><div class="ic">◐</div><h3>Matchup preview</h3><p>Win probability for the week and the handful of players whose games actually decide it.</p></div>
+      <div class="feat"><div class="ic">⧉</div><h3>Every league, one model</h3><p>Yahoo and ESPN leagues normalized into a single view, scored under each league's exact rules.</p></div>
+      <div class="feat"><div class="ic">✦</div><h3>Explained, not hallucinated</h3><p>Projections and probabilities come from a deterministic engine. The AI narrates them and cites the numbers it was given.</p></div>
+      <div class="feat"><div class="ic">◉</div><h3>Private by design</h3><p>Runs on your own machine. Your credentials and league data never leave it — and nothing is written back to your league.</p></div>
+    </div>
+  </section>
+
+  <section id="data">
+    <div class="split">
+      <div>
+        <div class="kicker">Data &amp; privacy</div>
+        <h2>What we read — and what we don't.</h2>
+        <p class="sub">Access is scoped to leagues your own account belongs to, and it is read-only. That isn't a setting; it's the only mode there is.</p>
+      </div>
+      <div>
+        <ul class="list ok">
+          <li><i>✓</i><span><b>League settings &amp; scoring rules</b> — so projections match your league, not a default.</span></li>
+          <li><i>✓</i><span><b>Rosters, matchups &amp; standings</b> — for leagues you are a member of.</span></li>
+          <li><i>✓</i><span><b>Available players</b> — the waiver pool, ranked under your rules.</span></li>
+        </ul>
+        <ul class="list no" style="margin-top:14px">
+          <li><i>✕</i><span><b>No writes.</b> We never change a lineup, submit a claim, or send a message.</span></li>
+          <li><i>✕</i><span><b>No sharing.</b> League data is never sold, aggregated, or used to train anything.</span></li>
+          <li><i>✕</i><span><b>No account creation.</b> One person, one account, their own leagues.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="band">
+    <div class="stats">
+      <div class="stat"><b>1</b><span>authorization, then it just works</span></div>
+      <div class="stat"><b>2</b><span>platforms — Yahoo &amp; ESPN</span></div>
+      <div class="stat"><b>0</b><span>numbers invented by the AI</span></div>
+      <div class="stat"><b>0</b><span>writes back to your league</span></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Simplifi FFB</span>
+    <span class="attrib">Fantasy data provided by Yahoo Fantasy and ESPN Fantasy. Not affiliated with or endorsed by Yahoo or ESPN.</span>
+  </div>
+</footer>
+
+</body>
+</html>
